@@ -1,6 +1,6 @@
 // pages/api/submit-form.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import clientPromise from "@/app/lib/mongodb";
+import getClient from "@/app/lib/mongodb";
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,7 +10,7 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const client = await clientPromise;
+    const client = await getClient();
     const db = client.db(process.env.MONGODB_DB);
     const { name, email, message } = req.body;
 
