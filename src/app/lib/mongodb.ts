@@ -14,8 +14,11 @@ let _clientPromise: Promise<MongoClient> | undefined;
 export default function getClient(): Promise<MongoClient> {
   if (!_clientPromise) {
     if (!uri) {
+      console.error("CRITICAL: MONGODB_URI is not set");
       throw new Error("Add MONGODB_URI to .env.local");
     }
+
+    console.log("Connecting to MongoDB. NODE_ENV:", process.env.NODE_ENV);
 
     if (process.env.NODE_ENV === "development") {
       const globalWithMongo = global as typeof globalThis & {
@@ -23,13 +26,18 @@ export default function getClient(): Promise<MongoClient> {
       };
 
       if (!globalWithMongo._mongoClientPromise) {
+        console.log("Creating new MongoDB connection (development)");
         _client = new MongoClient(uri, options);
         globalWithMongo._mongoClientPromise = _client.connect();
       }
       _clientPromise = globalWithMongo._mongoClientPromise;
     } else {
+      console.log("Creating new MongoDB connection (production)");
       _client = new MongoClient(uri, options);
-      _clientPromise = _client.connect();
+      _clientPromise = _client.connect().catch((err) => {
+        console.error("MongoDB connection error:", err.message);
+        throw err;
+      });
     }
   }
 
